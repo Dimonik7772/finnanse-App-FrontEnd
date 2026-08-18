@@ -1,16 +1,17 @@
 import { AxiosError } from "axios";
-import { api } from "./api";
+import { api, refreshApi } from "./api";
 import { LoginRequest, RegisterRequest } from "@/types/auth";
 import { User } from "@/types/user";
 import {
   TransactionResponse,
   CreateTransaction,
-  transaction,
+  transactions,
 } from "@/types/transaction";
+import toast from "react-hot-toast";
 
 export const userLogin = async (data: LoginRequest) => {
   try {
-    const res = await api.post("/api/auth/login", data);
+    const res = await api.post("/login", data);
     return res.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
@@ -37,7 +38,7 @@ export const userLogin = async (data: LoginRequest) => {
 
 export const userRegister = async (data: RegisterRequest) => {
   try {
-    const response = await api.post("/api/auth/register", data);
+    const response = await api.post("/register", data);
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
@@ -62,48 +63,41 @@ export const userRegister = async (data: RegisterRequest) => {
 };
 
 export const getMe = async (): Promise<User> => {
-  try {
-    const response = await api.get<User>("/api/profile/me");
-    return response.data;
-  } catch (error: unknown) {
-    const axiosError = error as AxiosError;
+  const response = await api.get<User>("/getMe");
 
-    if (axiosError.response?.status === 401) {
-      try {
-        await api.post("/api/auth/refresh");
-
-        const retryResponse = await api.get<User>("/api/profile/me");
-
-        return retryResponse.data;
-      } catch {
-        throw new Error("Сесія закінчилася. Увійдіть знову.");
-      }
-    }
-    let message = "Не вдалося завантажити профіль";
-
-    if (
-      axiosError.response?.data &&
-      typeof axiosError.response.data === "object"
-    ) {
-      const data = axiosError.response.data as Record<string, unknown>;
-
-      const maybeMessage =
-        (data.message as string | undefined) ||
-        (data.error as string | undefined);
-
-      message = maybeMessage || message;
-    } else if (axiosError.message) {
-      message = axiosError.message;
-    } else if (error instanceof Error) {
-      message = error.message;
-    }
-
-    throw new Error(message);
-  }
+  return response.data;
 };
 
+let refreshPromise: Promise<unknown> | null = null;
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originRequest = error.config;
+    if (error.response?.status !== 401) {
+      return Promise.reject(error);
+    }
+    if (originRequest._retry) {
+      return Promise.reject(error);
+    }
+    originRequest._retry = true;
+    try {
+      if (!refreshPromise) {
+        refreshPromise = refreshApi.post("refresh").finally(() => {
+          refreshPromise = null;
+        });
+      }
+      await refreshPromise;
+
+      return api(originRequest);
+    } catch {
+      return Promise.reject(error);
+    }
+  },
+);
+
 export const logout = async (): Promise<void> => {
-  await api.post("/api/auth/logout");
+  await api.post("/logout");
 };
 
 export const fetchTransaction = async (
@@ -113,7 +107,7 @@ export const fetchTransaction = async (
   sort?: "asc" | "desc",
 ) => {
   try {
-    const response = await api.get<TransactionResponse>("/api/transaction", {
+    const response = await api.get<TransactionResponse>("/transaction", {
       params: {
         page,
         perPage: 8,
@@ -147,7 +141,7 @@ export const fetchTransaction = async (
 
 export const fetchTransactionById = async (id: string) => {
   try {
-    const response = await api.get<transaction>(`/api/trnasaction/${id}`);
+    const response = await api.get<transactions>(`/api/trnasaction/${id}`);
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {

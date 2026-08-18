@@ -4,7 +4,8 @@ type category = {
   icon: string;
 };
 
-export type transaction = {
+export type transactions = {
+  _id: string;
   amount: number;
   type: "expense" | "income";
   category: category;
@@ -17,7 +18,7 @@ export type TransactionResponse = {
   perPage: number;
   totalTransaction: number;
   totalPages: number;
-  transaction: transaction[];
+  transactions: transactions[];
 };
 
 export type CreateTransaction = {

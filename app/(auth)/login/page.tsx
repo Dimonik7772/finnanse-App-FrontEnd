@@ -1,9 +1,9 @@
 "use client";
-import { getMe, userLogin, userRegister } from "@/lib/api/clinetApi";
+import { getMe, userLogin } from "@/lib/api/clinetApi";
 import { UserLogin } from "@/types/auth";
 import axios from "axios";
 import { Field, type FieldProps, Form, Formik, FormikHelpers } from "formik";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import * as Yup from "yup";
 import css from "./loginPage.module.css";
@@ -99,8 +99,10 @@ export default function Login() {
               </>
             )}
           </Field>
-          {isSubmitting ? "Loading..." : "Entered"}
-          <button type="submit" disabled={isSubmitting}></button>
+
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Loading..." : "Entered"}
+          </button>
         </Form>
       )}
     </Formik>

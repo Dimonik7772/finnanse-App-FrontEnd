@@ -1,9 +1,10 @@
+"use client";
 import { getMe, userRegister } from "@/lib/api/clinetApi";
 import { UserRegister } from "@/types/auth";
 import axios from "axios";
 import { Field, type FieldProps, Form, Formik, FormikHelpers } from "formik";
 import css from "./registrationPage.module.css";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import * as Yup from "yup";
 export default function Register() {
@@ -126,14 +127,13 @@ export default function Register() {
               </>
             )}
           </Field>
-          {isSubmitting ? "Loading..." : "Register"}
-          <button type="submit" disabled={isSubmitting}></button>
+
+          <button type="submit" disabled={isSubmitting}>
+            {" "}
+            {isSubmitting ? "Loading..." : "Register"}
+          </button>
         </Form>
       )}
     </Formik>
   );
 }
-//  <label htmlFor="name">
-//           Name
-//           <input type="text" id="name" placeholder="your name" />
-//         </label>
