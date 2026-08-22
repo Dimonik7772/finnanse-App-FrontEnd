@@ -1,5 +1,6 @@
 import { transactions } from "@/types/transaction";
 import { formatDate } from "../formatDate/formatDate";
+import Link from "next/link";
 
 type TransactionListProps = {
   transactions: transactions[];
@@ -19,6 +20,7 @@ export default function TransactionList({
             <p>{transaction.description}</p>
             <h2>{transaction.category.name}</h2>
             <p>{transaction.category.icon}</p>
+            <Link href={`/transaction/${transaction._id}`}>View Detail</Link>
             <p>{date}</p>
             <p>{time}</p>
           </li>
